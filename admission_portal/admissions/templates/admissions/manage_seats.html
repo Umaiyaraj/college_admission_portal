@@ -1,0 +1,148 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Seat Management - Admin{% endblock %}
+
+{% block content %}
+
+<!-- ✅ ADMIN ONLY CHECK -->
+{% if not user.is_superuser %}
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Access Denied.</strong> This page is only accessible to Administrators.
+    </div>
+    <meta http-equiv="refresh" content="3;url={% url 'dashboard_officer' %}">
+{% else %}
+<div class="dashboard-header">
+    <h1>
+        <i class="fas fa-chair"></i>
+        Seat Management
+    </h1>
+    <p>Monitor and manage seat allocations across courses</p>
+</div>
+
+<div class="seat-stats">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-chair"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ total_seats }}</h3>
+            <p>Total Seats</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ filled_seats }}</h3>
+            <p>Filled Seats</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ available_seats }}</h3>
+            <p>Available Seats</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{% widthratio filled_seats total_seats 100 %}%</h3>
+            <p>Fill Rate</p>
+        </div>
+    </div>
+</div>
+
+<div class="seat-section">
+    <h3>
+        <i class="fas fa-university"></i>
+        Course-wise Seat Status
+    </h3>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Department</th>
+                    <th>Total Seats</th>
+                    <th>Filled</th>
+                    <th>Available</th>
+                    <th>Fill Rate</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                <tr>
+                    <td>
+                        <strong>{{ course.name }}</strong>
+                        <br>
+                        <small class="text-muted">{{ course.code }}</small>
+                    </td>
+                    <td>{{ course.department }}</td>
+                    <td>{{ course.total_seats }}</td>
+                    <td>{{ course.filled_seats }}</td>
+                    <td>
+                        <span class="fw-bold {% if course.available_seats < 10 %}text-danger{% elif course.available_seats < 20 %}text-warning{% else %}text-success{% endif %}">
+                            {{ course.available_seats }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="progress-wrapper">
+                            <div class="progress-bar" style="width: 100px;">
+                                <div class="progress-fill" style="width: {{ course.seat_percentage }}%"></div>
+                            </div>
+                            <span class="progress-text">{{ course.seat_percentage|floatformat:1 }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if course.available_seats <= 0 %}
+                            <span class="status-badge status-rejected">Full</span>
+                        {% elif course.available_seats < 10 %}
+                            <span class="status-badge status-under_review">Limited</span>
+                        {% else %}
+                            <span class="status-badge status-approved">Available</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="seat-actions">
+    <h3 class="section-title">Quick Actions</h3>
+    <div class="action-buttons-grid">
+        <a href="{% url 'manage_applications' %}" class="action-card">
+            <i class="fas fa-user-check"></i>
+            <span>Approve Applications</span>
+            <small>Review pending</small>
+        </a>
+        <a href="#" class="action-card">
+            <i class="fas fa-file-export"></i>
+            <span>Export Report</span>
+            <small>Seat matrix</small>
+        </a>
+        <a href="#" class="action-card">
+            <i class="fas fa-cog"></i>
+            <span>Configure Seats</span>
+            <small>Update limits</small>
+        </a>
+        <a href="#" class="action-card">
+            <i class="fas fa-chart-pie"></i>
+            <span>View Analytics</span>
+            <small>Seat trends</small>
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

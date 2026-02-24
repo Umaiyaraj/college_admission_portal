@@ -1,0 +1,173 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Officer Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>
+        <i class="fas fa-tachometer-alt"></i>
+        Admission Officer Dashboard
+    </h1>
+    <p>Welcome, {{ user.first_name }}! Overview of admission activities.</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ total_applications }}</h3>
+            <p>Total Applications</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ pending_review }}</h3>
+            <p>Pending Review</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ approved_applications }}</h3>
+            <p>Approved</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-book"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ total_courses }}</h3>
+            <p>Courses</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <h3>
+            <i class="fas fa-file-medical"></i>
+            Recent Applications
+        </h3>
+        <div class="table-container">
+            {% if recent_applications %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>App No.</th>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in recent_applications %}
+                        <tr>
+                            <td>{{ app.application_number }}</td>
+                            <td>{{ app.student.username }}</td>
+                            <td>{{ app.course.code }}</td>
+                            <td>
+                                <span class="status-badge status-{{ app.status|lower }}">
+                                    {{ app.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'review_application' app.id %}" class="btn btn-small btn-primary">
+                                    <i class="fas fa-eye"></i> Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted p-3">No recent applications</p>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'manage_applications' %}" class="btn btn-secondary btn-small">
+                View All Applications
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <h3>
+            <i class="fas fa-exclamation-triangle"></i>
+            Courses with Low Seats
+        </h3>
+        <div class="table-container">
+            {% if low_seat_courses %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Filled</th>
+                            <th>Total</th>
+                            <th>Available</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in low_seat_courses %}
+                        <tr>
+                            <td>{{ course.name }}</td>
+                            <td>{{ course.filled_seats }}</td>
+                            <td>{{ course.total_seats }}</td>
+                            <td>
+                                <span class="fw-bold {% if course.available_seats < 10 %}text-danger{% else %}text-warning{% endif %}">
+                                    {{ course.available_seats }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted p-3">All courses have sufficient seats</p>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'manage_seats' %}" class="btn btn-secondary btn-small">
+                Manage Seats
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <h3 class="section-title">Quick Actions</h3>
+    <div class="action-buttons-grid">
+        <a href="{% url 'manage_applications' %}" class="action-card">
+            <i class="fas fa-file-alt"></i>
+            <span>Review Applications</span>
+            <small>Pending: {{ pending_review }}</small>
+        </a>
+        <a href="{% url 'manage_courses' %}" class="action-card">
+            <i class="fas fa-book"></i>
+            <span>Manage Courses</span>
+            <small>{{ total_courses }} courses</small>
+        </a>
+        <a href="{% url 'manage_seats' %}" class="action-card">
+            <i class="fas fa-chair"></i>
+            <span>Seat Allocation</span>
+            <small>Monitor seats</small>
+        </a>
+        <a href="#" class="action-card">
+            <i class="fas fa-chart-bar"></i>
+            <span>Reports</span>
+            <small>Analytics</small>
+        </a>
+    </div>
+</div>
+{% endblock %}

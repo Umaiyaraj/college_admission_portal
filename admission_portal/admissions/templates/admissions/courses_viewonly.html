@@ -1,0 +1,122 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Courses - Officer View{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>
+        <i class="fas fa-book"></i>
+        Course Catalog
+    </h1>
+    <p>View-only access - All courses</p>
+</div>
+
+<!-- Officer badge -->
+<div class="officer-badge">
+    <i class="fas fa-user-tie"></i> Officer View - Read Only
+</div>
+
+<!-- Search Section -->
+<div class="search-section">
+    <div class="search-card">
+        <form method="GET" action="{% url 'officer_view_courses' %}">
+            <div class="search-filters">
+                <div class="form-group">
+                    <input type="text" name="name" class="form-control" 
+                           placeholder="Search by course name..." 
+                           value="{{ request.GET.name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <input type="text" name="department" class="form-control" 
+                           placeholder="Search by department..." 
+                           value="{{ request.GET.department|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <select name="course_type" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="UG" {% if request.GET.course_type == 'UG' %}selected{% endif %}>Undergraduate</option>
+                        <option value="PG" {% if request.GET.course_type == 'PG' %}selected{% endif %}>Postgraduate</option>
+                        <option value="DIP" {% if request.GET.course_type == 'DIP' %}selected{% endif %}>Diploma</option>
+                    </select>
+                </div>
+                <div class="form-group filter-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'officer_view_courses' %}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results info -->
+<div class="results-info">
+    <p>Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ total_count }} courses</p>
+</div>
+
+<!-- Course Grid - NO EDIT/DELETE BUTTONS -->
+<div class="courses-grid">
+    {% for course in page_obj %}
+    <div class="course-card">
+        <div class="course-header">
+            <h3>{{ course.name }}</h3>
+            <span class="course-code">{{ course.code }}</span>
+        </div>
+        <div class="course-info">
+            <p><i class="fas fa-university"></i> {{ course.department }}</p>
+            <p><i class="fas fa-clock"></i> {{ course.duration }} years</p>
+            <p><i class="fas fa-graduation-cap"></i> {{ course.get_course_type_display }}</p>
+            <p><i class="fas fa-percentage"></i> Min: {{ course.min_percentage }}%</p>
+            <p><i class="fas fa-rupee-sign"></i> ₹{{ course.fee_per_year|floatformat:0 }}/year</p>
+        </div>
+        <div class="course-seats">
+            <div class="seat-info">
+                <span>Seats:</span>
+                <span class="seat-count">{{ course.filled_seats }}/{{ course.total_seats }}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ course.seat_percentage }}%"></div>
+            </div>
+            <small class="available-text">{{ course.available_seats }} seats available</small>
+        </div>
+        <!-- ❌ NO EDIT/DELETE BUTTONS - View only -->
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No Courses Found</h3>
+        <p>Try adjusting your search criteria.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+            <span class="page-link active">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+
+{% endblock %}

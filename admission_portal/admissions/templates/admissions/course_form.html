@@ -1,0 +1,120 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-sm">
+    <div class="form-container">
+        <div class="form-header">
+            <h1>
+                {% if course %}
+                    <i class="fas fa-edit"></i> Edit Course
+                {% else %}
+                    <i class="fas fa-plus-circle"></i> Add New Course
+                {% endif %}
+            </h1>
+            <p>{{ title }}</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3>Basic Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Course Code *</label>
+                        <input type="text" name="code" class="form-control" 
+                               value="{{ form.code.value|default:'' }}" 
+                               placeholder="e.g., CS101" required>
+                        {% if form.code.errors %}
+                            <small class="text-danger">{{ form.code.errors.0 }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Course Name *</label>
+                        <input type="text" name="name" class="form-control" 
+                               value="{{ form.name.value|default:'' }}" 
+                               placeholder="e.g., Bachelor of Computer Science" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Department *</label>
+                        <input type="text" name="department" class="form-control" 
+                               value="{{ form.department.value|default:'' }}" 
+                               placeholder="e.g., Computer Science" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Course Type *</label>
+                        <select name="course_type" class="form-control" required>
+                            <option value="">Select Type</option>
+                            <option value="UG" {% if form.course_type.value == 'UG' %}selected{% endif %}>Undergraduate</option>
+                            <option value="PG" {% if form.course_type.value == 'PG' %}selected{% endif %}>Postgraduate</option>
+                            <option value="DIP" {% if form.course_type.value == 'DIP' %}selected{% endif %}>Diploma</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea name="description" class="form-control" rows="4" 
+                              placeholder="Course description...">{{ form.description.value|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Duration & Seats</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Duration (years) *</label>
+                        <input type="number" name="duration" class="form-control" 
+                               value="{{ form.duration.value|default:'' }}" 
+                               min="1" max="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Seats *</label>
+                        <input type="number" name="total_seats" class="form-control" 
+                               value="{{ form.total_seats.value|default:60 }}" 
+                               min="1" max="500" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Eligibility & Fees</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Minimum Percentage *</label>
+                        <input type="number" name="min_percentage" class="form-control" 
+                               value="{{ form.min_percentage.value|default:'' }}" 
+                               step="0.01" min="0" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fee per Year (₹) *</label>
+                        <input type="number" name="fee_per_year" class="form-control" 
+                               value="{{ form.fee_per_year.value|default:'' }}" 
+                               step="1000" min="0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Eligibility Criteria *</label>
+                    <textarea name="eligibility_criteria" class="form-control" rows="3" 
+                              placeholder="e.g., 12th grade with Mathematics and minimum 75% aggregate">{{ form.eligibility_criteria.value|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> 
+                    {% if course %}Update Course{% else %}Create Course{% endif %}
+                </button>
+                <a href="{% url 'manage_courses' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Welcome - College Admission Portal{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Welcome to College Admission Portal</h1>
+        <p class="hero-subtitle">
+            Your gateway to quality education. Apply for courses, 
+            track your application, and join our academic community.
+        </p>
+        
+        <div class="hero-buttons">
+            {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}" class="btn btn-primary btn-large">
+                    <i class="fas fa-user-plus"></i> Start Application
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-secondary btn-large">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            {% elif user.groups.all.0.name == 'Students' %}
+                <a href="{% url 'apply_for_course' %}" class="btn btn-primary btn-large">
+                    <i class="fas fa-edit"></i> Apply for Course
+                </a>
+                <a href="{% url 'dashboard_student' %}" class="btn btn-secondary btn-large">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            {% else %}
+                <a href="{% url 'dashboard_officer' %}" class="btn btn-primary btn-large">
+                    <i class="fas fa-tachometer-alt"></i> Officer Dashboard
+                </a>
+                <a href="{% url 'manage_applications' %}" class="btn btn-secondary btn-large">
+                    <i class="fas fa-file-alt"></i> Applications
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="hero-image">
+        <i class="fas fa-university"></i>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="section-title">
+        <h2>Why Choose Our Portal?</h2>
+        <p>Designed to make your admission process simple and transparent</p>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h3>Quick Application</h3>
+            <p>Simple and streamlined application process that saves you time and effort.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Track Progress</h3>
+            <p>Real-time updates on your application status from submission to final decision.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Secure & Reliable</h3>
+            <p>Your data is protected with industry-standard security measures.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-headset"></i>
+            </div>
+            <h3>24/7 Support</h3>
+            <p>Our admission team is always ready to assist you with any queries.</p>
+        </div>
+    </div>
+</div>
+
+<div class="stats-section">
+    <div class="stats-container">
+        <div class="stat-item">
+            <h3>1500+</h3>
+            <p>Successful Admissions</p>
+        </div>
+        <div class="stat-item">
+            <h3>50+</h3>
+            <p>Courses Available</p>
+        </div>
+        <div class="stat-item">
+            <h3>98%</h3>
+            <p>Satisfaction Rate</p>
+        </div>
+        <div class="stat-item">
+            <h3>24/7</h3>
+            <p>Application Support</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

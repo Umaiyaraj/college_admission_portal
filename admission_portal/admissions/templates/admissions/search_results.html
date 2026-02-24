@@ -1,0 +1,161 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Search Results - College Admission Portal{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>
+        <i class="fas fa-search"></i>
+        Search Results
+    </h1>
+</div>
+
+<div class="search-query">
+    <p>
+        <strong>Search Query:</strong> "{{ request.GET.q|default:'' }}"
+    </p>
+    <p>
+        <strong>Results Found:</strong> {{ results_count }}
+    </p>
+</div>
+
+{% if applications %}
+    <div class="results-section">
+        <h3>
+            <i class="fas fa-file-alt"></i>
+            Applications
+        </h3>
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Application No.</th>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Submitted Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td>{{ app.application_number }}</td>
+                        <td>{{ app.student.username }}</td>
+                        <td>{{ app.course.name }}</td>
+                        <td>
+                            <span class="status-badge status-{{ app.status|lower }}">
+                                {{ app.status }}
+                            </span>
+                        </td>
+                        <td>{{ app.submission_date|date:"M d, Y"|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'review_application' app.id %}" class="btn btn-small btn-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+
+{% if courses %}
+    <div class="results-section">
+        <h3>
+            <i class="fas fa-book"></i>
+            Courses
+        </h3>
+        <div class="courses-grid">
+            {% for course in courses %}
+            <div class="course-card">
+                <div class="course-header">
+                    <h3>{{ course.name }}</h3>
+                    <span class="course-code">{{ course.code }}</span>
+                </div>
+                <div class="course-info">
+                    <p>
+                        <i class="fas fa-university"></i>
+                        {{ course.department }}
+                    </p>
+                    <p>
+                        <i class="fas fa-clock"></i>
+                        {{ course.duration }} years
+                    </p>
+                    <p>
+                        <i class="fas fa-graduation-cap"></i>
+                        {{ course.get_course_type_display }}
+                    </p>
+                    <p>
+                        <i class="fas fa-percentage"></i>
+                        Min: {{ course.min_percentage }}%
+                    </p>
+                </div>
+                <div class="course-seats">
+                    <div class="seat-info">
+                        <span>Available Seats:</span>
+                        <span class="seat-count">{{ course.available_seats }}/{{ course.total_seats }}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ course.seat_percentage }}%"></div>
+                    </div>
+                </div>
+                <div class="course-footer">
+                    {% if user.is_authenticated and user.groups.all.0.name == 'Students' %}
+                        <a href="{% url 'apply_for_course' %}" class="btn btn-primary btn-small">
+                            <i class="fas fa-edit"></i> Apply
+                        </a>
+                    {% elif not user.is_authenticated %}
+                        <a href="{% url 'register' %}" class="btn btn-primary btn-small">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{% if not applications and not courses %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No Results Found</h3>
+        <p>We couldn't find any matches for your search.</p>
+        <div class="hero-buttons">
+            <a href="{% url 'view_courses' %}" class="btn btn-primary">
+                <i class="fas fa-book"></i> Browse Courses
+            </a>
+            <a href="{% url 'manage_applications' %}" class="btn btn-secondary">
+                <i class="fas fa-file-alt"></i> View Applications
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+{% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}" class="page-link">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-link active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}&q={{ request.GET.q }}" class="page-link">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q }}" class="page-link">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

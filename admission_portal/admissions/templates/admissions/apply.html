@@ -1,0 +1,233 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Apply for Course{% endblock %}
+
+{% block content %}
+<div class="container-sm">
+    <div class="form-container">
+        <div class="form-header">
+            <h1><i class="fas fa-edit"></i> Apply for Course</h1>
+            <p>Fill in your details to submit your application</p>
+        </div>
+
+        <!-- ✅ Application Status Card -->
+        <div class="application-status-card">
+            <div class="status-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Active Applications</span>
+                    <span class="stat-value {% if active_count >= max_applications %}text-danger{% endif %}">
+                        {{ active_count }}/{{ max_applications }}
+                    </span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Remaining Slots</span>
+                    <span class="stat-value {% if remaining < 2 %}text-warning{% endif %}">
+                        {{ remaining }}
+                    </span>
+                </div>
+            </div>
+            {% if active_count >= max_applications %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    You have reached the maximum limit of {{ max_applications }} active applications.
+                    Please complete or withdraw existing applications to apply for new courses.
+                </div>
+            {% endif %}
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3>
+                    <i class="fas fa-book"></i>
+                    Course Selection
+                </h3>
+                <div class="form-group">
+                    <label for="course" class="form-label">Select Course *</label>
+                    
+                    {% if total_courses == 0 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-circle"></i>
+                            No courses are currently available. Please check back later.
+                        </div>
+                    {% else %}
+                        <select id="course" name="course" class="form-control" required>
+                            <option value="">-- Choose a course --</option>
+                            
+                            {% for course in courses %}
+                                <option value="{{ course.id }}" 
+                                    {% if course.available_seats <= 0 %}disabled{% endif %}>
+                                    {{ course.code }} - {{ course.name }}
+                                    [{{ course.department }}]
+                                    - Seats: {{ course.available_seats }}/{{ course.total_seats }}
+                                    - Required: {{ course.min_percentage }}%
+                                    {% if course.available_seats <= 0 %}
+                                        (❌ FULL)
+                                    {% elif course.available_seats < 10 %}
+                                        (⚠️ Only {{ course.available_seats }} left!)
+                                    {% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            Showing {{ total_courses }} available courses
+                        </small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>
+                    <i class="fas fa-graduation-cap"></i>
+                    Academic Information
+                </h3>
+                <div class="form-group">
+                        <label for="previous_school" class="form-label">Previous School *</label>
+                        <input type="text" 
+                               id="previous_school" 
+                               name="previous_school" 
+                               class="form-control" 
+                               placeholder="Enter the name of your previous school or institution" 
+                               value="{{ form.previous_school.value|default:'' }}"
+                               required>
+                               {{ form.previous_school.errors }}
+                    </div>
+                <div class="form-group">
+                    <label for="previous_qualification" class="form-label">
+                        Previous Qualification *
+                    </label>
+                    <input type="text"
+                    id="previous_qualification"
+                    name="previous_qualification"
+                    class="form-control"
+                    placeholder="e.g., 12th Grade / Diploma"
+                    value="{{ form.previous_qualification.value|default:'' }}"
+                    required>
+                    {{ form.previous_qualification.errors }}
+                </div>    
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="percentage_obtained" class="form-label">Percentage Obtained *</label>
+                        <input type="number" 
+                               id="percentage_obtained" 
+                               name="percentage_obtained" 
+                               class="form-control" 
+                               placeholder="e.g., 85.5" 
+                               step="0.01" 
+                               min="0" 
+                               max="100"
+                               value="{{ form.percentage_obtained.value|default:'' }}"
+                               required>
+                               {{ form.percentage_obtained.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="year_of_passing" class="form-label">Year of Passing *</label>
+                        <input type="number" 
+                               id="year_of_passing" 
+                               name="year_of_passing" 
+                               class="form-control" 
+                               placeholder="e.g., 2024" 
+                               min="2000" 
+                               max="2025"
+                               value="{{ form.year_of_passing.value|default:'' }}"
+                               required>
+                                 {{ form.year_of_passing.errors }}
+                    </div>
+                </div>
+            <div class="form-section">
+                <h3>
+                    <i class="fas fa-user"></i>
+                    Personal Information
+                </h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date_of_birth" class="form-label">Date of Birth *</label>
+                        <input type="date" 
+                               id="date_of_birth" 
+                               name="date_of_birth" 
+                               class="form-control"
+                               value="{{ form.date_of_birth.value|default:'' }}" 
+                               required>
+                               {{ form.date_of_birth.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Phone Number *</label>
+                        <input type="tel" 
+                               id="phone" 
+                               name="phone" 
+                               class="form-control" 
+                               placeholder="Enter phone number"
+                               value="{{ form.phone.value|default:'' }}" 
+                               required>
+                               {{ form.phone.errors }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="emergency_contact" class="form-label">Emergency Contact *</label>
+                    <input type="tel" 
+                           id="emergency_contact" 
+                           name="emergency_contact" 
+                           class="form-control" 
+                           placeholder="Emergency contact number"
+                           value="{{ form.emergency_contact.value|default:'' }}" 
+                           required>
+                           {{ form.emergency_contact.errors }}
+                    </div>
+                </div>            
+                <div class="form-group">
+                    <label for="address" class="form-label">Address *</label>
+                    <textarea id="address"
+                    name="address"
+                    class="form-control"
+                    rows="3"
+                    placeholder="Enter your complete address"
+                    required>{{ form.address.value|default:'' }}</textarea>
+                    {{ form.address.errors }}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" 
+                        {% if active_count >= max_applications or total_courses == 0 %}disabled{% endif %}>
+                    <i class="fas fa-save"></i> 
+                    {% if active_count >= max_applications %}
+                        Application Limit Reached
+                    {% else %}
+                        Save Application
+                    {% endif %}
+                </button>
+                <a href="{% url 'dashboard_student' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ✅ Available Courses Summary -->
+    {% if courses %}
+    <div class="available-courses-summary">
+        <h3><i class="fas fa-list"></i> Available Courses Summary</h3>
+        <div class="courses-mini-grid">
+            {% for course in courses|slice:":4" %}
+                <div class="course-mini-card {% if course.available_seats <= 0 %}course-full{% endif %}">
+                    <h4>{{ course.code }}</h4>
+                    <p>{{ course.name|truncatechars:30 }}</p>
+                    <span class="course-seats-badge {% if course.available_seats < 10 %}critical{% endif %}">
+                        {{ course.available_seats }} seats left
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+        {% if courses|length > 4 %}
+            <div class="text-center mt-3">
+                <a href="{% url 'view_courses' %}" class="btn btn-outline btn-sm">
+                    View All {{ total_courses }} Courses
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

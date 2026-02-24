@@ -1,0 +1,149 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Manage Courses - Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>
+        <i class="fas fa-book"></i>
+        Manage Courses
+    </h1>
+    <p>Admin Panel - Create, Edit, and Delete Courses</p>
+</div>
+
+<!-- Admin badge -->
+<div class="admin-badge">
+    <i class="fas fa-crown"></i> Administrator Access
+    <span class="badge">Superuser: {{ user.username }}</span>
+</div>
+
+<!-- Admin actions -->
+<div class="admin-actions">
+    <a href="{% url 'add_course' %}" class="btn btn-success">
+        <i class="fas fa-plus-circle"></i> Add New Course
+    </a>
+    <a href="{% url 'admin:admissions_course_changelist' %}" class="btn btn-secondary">
+        <i class="fas fa-database"></i> Django Admin
+    </a>
+</div>
+
+<!-- Search Section -->
+<div class="search-section">
+    <div class="search-card">
+        <form method="GET" action="{% url 'manage_courses' %}">
+            <div class="search-filters">
+                <div class="form-group">
+                    <input type="text" name="name" class="form-control" 
+                           placeholder="Search by course name..." 
+                           value="{{ request.GET.name|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <input type="text" name="department" class="form-control" 
+                           placeholder="Search by department..." 
+                           value="{{ request.GET.department|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <select name="course_type" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="UG" {% if request.GET.course_type == 'UG' %}selected{% endif %}>Undergraduate</option>
+                        <option value="PG" {% if request.GET.course_type == 'PG' %}selected{% endif %}>Postgraduate</option>
+                        <option value="DIP" {% if request.GET.course_type == 'DIP' %}selected{% endif %}>Diploma</option>
+                    </select>
+                </div>
+                <div class="form-group filter-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <a href="{% url 'manage_courses' %}" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results info -->
+<div class="results-info">
+    <p>Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ total_count }} courses</p>
+</div>
+
+<!-- Courses Table with Admin Actions -->
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Course Name</th>
+                <th>Department</th>
+                <th>Type</th>
+                <th>Duration</th>
+                <th>Seats</th>
+                <th>Fee</th>
+                <th>Min %</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in page_obj %}
+            <tr>
+                <td><strong>{{ course.code }}</strong></td>
+                <td>{{ course.name }}</td>
+                <td>{{ course.department }}</td>
+                <td>{{ course.get_course_type_display }}</td>
+                <td>{{ course.duration }} years</td>
+                <td>
+                    {{ course.filled_seats }}/{{ course.total_seats }}
+                    <br><small class="{% if course.available_seats < 10 %}text-danger{% else %}text-success{% endif %}">
+                        {{ course.available_seats }} left
+                    </small>
+                </td>
+                <td>₹{{ course.fee_per_year|floatformat:0 }}</td>
+                <td>{{ course.min_percentage }}%</td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'edit_course' course.id %}" class="btn-small btn-info">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="{% url 'delete_course' course.id %}" 
+                           class="btn-small btn-danger"
+                           onclick="return confirm('Are you sure you want to delete {{ course.code }}?')">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center">No courses found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+            <span class="page-link active">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

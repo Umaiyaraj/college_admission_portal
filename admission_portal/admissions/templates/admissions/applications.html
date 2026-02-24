@@ -1,0 +1,232 @@
+{% extends 'admissions/base.html' %}
+
+{% block title %}Manage Applications{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>
+        <i class="fas fa-file-alt"></i>
+        Manage Applications
+    </h1>
+    <p>Review and manage student applications</p>
+</div>
+
+<!-- ✅ STATUS SUMMARY CARDS -->
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #E9F0FA;">
+            <i class="fas fa-clock" style="color: #0A66C2;"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ pending_count }}</h3>
+            <p>Pending Review</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #E2F0E6;">
+            <i class="fas fa-check-circle" style="color: #057642;"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ approved_count }}</h3>
+            <p>Approved</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #FFE9E5;">
+            <i class="fas fa-times-circle" style="color: #B24020;"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ rejected_count }}</h3>
+            <p>Rejected</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #F3F2F0;">
+            <i class="fas fa-file-alt" style="color: #666666;"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ total_count }}</h3>
+            <p>Total</p>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ STATUS TABS - NO JAVASCRIPT -->
+<div class="status-tabs">
+    <a href="{% url 'manage_applications' %}?show_all=false" 
+       class="tab {% if not show_all and not current_status %}active{% endif %}">
+        <i class="fas fa-bell"></i> Pending ({{ pending_count }})
+    </a>
+    <a href="{% url 'manage_applications' %}?show_all=true" 
+       class="tab {% if show_all and not current_status %}active{% endif %}">
+        <i class="fas fa-list"></i> All ({{ total_count }})
+    </a>
+</div>
+
+<!-- ✅ FILTER SECTION -->
+<div class="filter-section">
+    <div class="filter-card">
+        <form method="GET" action="{% url 'manage_applications' %}">
+            <div class="filter-grid">
+                <div class="form-group">
+                    <label class="form-label">Course</label>
+                    <select name="course" class="form-control">
+                        <option value="">All Courses</option>
+                        {% for course in all_courses %}
+                            <option value="{{ course.id }}" 
+                                {% if request.GET.course == course.id|stringformat:'i' %}selected{% endif %}>
+                                {{ course.code }} - {{ course.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="date_from" class="form-control" 
+                           value="{{ request.GET.date_from|default:'' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="date_to" class="form-control" 
+                           value="{{ request.GET.date_to|default:'' }}">
+                </div>
+                <div class="form-group filter-buttons">
+                    <input type="hidden" name="show_all" value="{{ show_all|yesno:'true,false' }}">
+                    <input type="hidden" name="status" value="{{ current_status|default:'' }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'manage_applications' %}?show_all=false" class="btn btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ✅ RESULTS INFO -->
+<div class="results-info">
+    <p>
+        <i class="fas fa-info-circle"></i>
+        Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} applications
+        {% if not show_all %}
+            <span class="badge badge-info">🔴 Pending Only</span>
+        {% else %}
+            <span class="badge badge-secondary">📋 All Applications</span>
+        {% endif %}
+    </p>
+</div>
+
+<!-- ✅ APPLICATIONS TABLE -->
+{% if page_obj %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Application No.</th>
+                    <th>Student</th>
+                    <th>Course</th>
+                    <th>Status</th>
+                    <th>Eligibility</th>
+                    <th>Submitted</th>
+                    <th>Reviewed</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in page_obj %}
+                <tr class="{% if app.status == 'APPROVED' %}row-approved{% elif app.status == 'REJECTED' %}row-rejected{% endif %}">
+                    <td>
+                        <strong>{{ app.application_number }}</strong>
+                        {% if app.status == 'DRAFT' %}
+                            <span class="status-badge status-draft">Draft</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ app.student.get_full_name|default:app.student.username }}</td>
+                    <td>{{ app.course.code }}</td>
+                    <td>
+                        <span class="status-badge status-{{ app.status|lower }}">
+                            {{ app.status|title }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if app.is_eligible %}
+                            <span class="text-success">
+                                <i class="fas fa-check-circle"></i> Eligible
+                            </span>
+                        {% else %}
+                            <span class="text-danger">
+                                <i class="fas fa-times-circle"></i> Not Eligible
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ app.submission_date|date:"M d, Y"|default:"-" }}</td>
+                    <td>
+                        {% if app.reviewed_by %}
+                            {{ app.reviewed_by.get_full_name|default:app.reviewed_by.username }}
+                            <br>
+                            <small>{{ app.review_date|date:"M d, Y" }}</small>
+                        {% else %}
+                            <span class="text-muted">Not reviewed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'review_application' app.id %}" class="btn btn-small btn-primary">
+                            <i class="fas fa-eye"></i> 
+                            {% if app.reviewed_by %}Re-review{% else %}Review{% endif %}
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ✅ PAGINATION -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&show_all={{ show_all|yesno:'true,false' }}&status={{ current_status|default:'' }}&course={{ request.GET.course|default:'' }}&date_from={{ request.GET.date_from|default:'' }}&date_to={{ request.GET.date_to|default:'' }}" 
+               class="page-link">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-link active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}&show_all={{ show_all|yesno:'true,false' }}&status={{ current_status|default:'' }}&course={{ request.GET.course|default:'' }}&date_from={{ request.GET.date_from|default:'' }}&date_to={{ request.GET.date_to|default:'' }}" 
+                   class="page-link">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&show_all={{ show_all|yesno:'true,false' }}&status={{ current_status|default:'' }}&course={{ request.GET.course|default:'' }}&date_from={{ request.GET.date_from|default:'' }}&date_to={{ request.GET.date_to|default:'' }}" 
+               class="page-link">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <h3>No Applications Found</h3>
+        <p>
+            {% if not show_all %}
+                No pending applications to review.
+                <br>
+                <a href="?show_all=true" class="btn btn-link">View all applications</a>
+            {% else %}
+                No applications match your criteria.
+            {% endif %}
+        </p>
+    </div>
+{% endif %}
+{% endblock %}
